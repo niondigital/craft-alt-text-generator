@@ -8,6 +8,7 @@ use craft\helpers\DateTimeHelper;
 use craft\helpers\Queue;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
+use craft\models\ImageTransform;
 use dispositiontools\craftalttextgenerator\AltTextGenerator;
 use dispositiontools\craftalttextgenerator\jobs\RefreshImageDetails as RefreshImageDetailsJob;
 use dispositiontools\craftalttextgenerator\jobs\RequestAltText as RequestAltTextJob;
@@ -501,17 +502,6 @@ class AltTextAiApi extends Component
             ];
         }
         
-        
-        // check if the image is less than 10mb
-          
-        if ($asset->size > 10000000) {
-            return [
-                'error' => true,
-                'errorMessage' => "Image file size is over 10mb",
-                'success' => false,
-            ];
-        }
-        
         // check if the image is over 50 x 50
         if ($asset->width < 51 || $asset->height < 51) {
             return [
@@ -633,7 +623,7 @@ class AltTextAiApi extends Component
 
         // create a call model
 
-        $assetUrl = $asset->url;
+        $assetUrl = $this->getAssetUrl($asset);
 
         
 
@@ -1200,5 +1190,11 @@ class AltTextAiApi extends Component
         Craft::$app->cache->set($creditsCacheKey, $credits, 60 * 15);
         
         return $credits;
+    }
+
+    private function getAssetUrl(AssetElement $asset): string {
+        return $asset->getUrl(new ImageTransform([
+            'width' => 1000,
+        ]));
     }
 }
